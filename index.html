@@ -2,37 +2,865 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Art of Open Source | Live Lab</title>
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --acid: #C8FF00;
+            --ink: #0D0D0D;
+            --fog: #1A1A1A;
+            --mist: #2A2A2A;
+            --ash: #888888;
+            --white: #F5F5F0;
+        }
+
+        *, *::before, *::after {
+            margin: 0; padding: 0;
+            box-sizing: border-box;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--ink);
+            color: var(--white);
+            font-family: 'DM Sans', sans-serif;
+            cursor: none;
+            overflow-x: hidden;
+        }
+
+        /* Custom Cursor */
+        .cursor {
+            width: 12px; height: 12px;
+            background: var(--acid);
+            border-radius: 50%;
+            position: fixed;
+            top: 0; left: 0;
+            pointer-events: none;
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease, width 0.2s, height 0.2s;
+            mix-blend-mode: difference;
+        }
+        .cursor-ring {
+            width: 36px; height: 36px;
+            border: 1px solid var(--acid);
+            border-radius: 50%;
+            position: fixed;
+            top: 0; left: 0;
+            pointer-events: none;
+            z-index: 99998;
+            transform: translate(-50%, -50%);
+            transition: transform 0.15s ease, width 0.3s, height 0.3s, opacity 0.3s;
+            opacity: 0.5;
+        }
+        body:hover .cursor-ring { opacity: 1; }
+
+        /* Noise overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9000;
+            opacity: 0.4;
+        }
+
+        /* NAV */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 48px;
+            mix-blend-mode: normal;
+        }
+
+        nav::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 48px; right: 48px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--mist), transparent);
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.4rem;
+            letter-spacing: 4px;
+            color: var(--white);
+        }
+
+        .logo span {
+            color: var(--acid);
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--ash);
+            letter-spacing: 2px;
+        }
+
+        .status-dot {
+            width: 6px; height: 6px;
+            background: var(--acid);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.6); }
+        }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-left {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 120px 48px 80px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-tag {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--acid);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 32px;
+            opacity: 0;
+            animation: fadeUp 0.8s ease 0.2s forwards;
+        }
+
+        .hero h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(5rem, 10vw, 9rem);
+            line-height: 0.9;
+            letter-spacing: -2px;
+            color: var(--white);
+            margin-bottom: 40px;
+            opacity: 0;
+            animation: fadeUp 0.8s ease 0.4s forwards;
+        }
+
+        .hero h1 em {
+            font-style: normal;
+            color: var(--acid);
+            display: block;
+        }
+
+        .hero-sub {
+            font-size: 1rem;
+            color: var(--ash);
+            line-height: 1.7;
+            max-width: 380px;
+            margin-bottom: 56px;
+            opacity: 0;
+            animation: fadeUp 0.8s ease 0.6s forwards;
+        }
+
+        .hero-actions {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            opacity: 0;
+            animation: fadeUp 0.8s ease 0.8s forwards;
+        }
+
+        #gate-btn {
+            position: relative;
+            background: var(--acid);
+            border: none;
+            color: var(--ink);
+            padding: 18px 40px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            cursor: none;
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        #gate-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--white);
+            transform: translateX(-101%);
+            transition: transform 0.3s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        #gate-btn:hover::before { transform: translateX(0); }
+        #gate-btn:hover { transform: scale(1.02); }
+
+        #gate-btn span { position: relative; z-index: 1; }
+
+        .btn-secondary {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--ash);
+            letter-spacing: 2px;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+            cursor: none;
+        }
+        .btn-secondary:hover { color: var(--white); border-color: var(--white); }
+
+        /* Hero Right */
+        .hero-right {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .hero-visual {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 1px;
+            opacity: 0;
+            animation: fadeIn 1.5s ease 1s forwards;
+        }
+
+        .grid-cell {
+            background: var(--fog);
+            transition: background 0.3s ease, opacity 0.3s ease;
+        }
+
+        .grid-cell.lit {
+            background: var(--acid);
+            opacity: 0.15;
+        }
+
+        .grid-cell.bright {
+            background: var(--acid);
+            opacity: 0.6;
+        }
+
+        .hero-counter {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+
+        .counter-num {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 8rem;
+            color: var(--acid);
+            line-height: 1;
+            display: block;
+            filter: drop-shadow(0 0 40px rgba(200, 255, 0, 0.4));
+            animation: countUp 2s ease 1.2s both;
+        }
+
+        @keyframes countUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .counter-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--ash);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 12px;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Scrolling ticker */
+        .ticker-wrap {
+            background: var(--acid);
+            padding: 14px 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .ticker {
+            display: flex;
+            gap: 0;
+            animation: ticker 20s linear infinite;
+            white-space: nowrap;
+        }
+
+        .ticker-item {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1rem;
+            color: var(--ink);
+            letter-spacing: 4px;
+            padding: 0 48px;
+        }
+
+        .ticker-dot {
+            color: rgba(0,0,0,0.3);
+        }
+
+        @keyframes ticker {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        /* STATS SECTION */
+        .stats {
+            padding: 100px 48px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--mist);
+        }
+
+        .stat-card {
+            background: var(--ink);
+            padding: 60px 48px;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+
+        .stat-card:hover {
+            background: var(--fog);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 3px; height: 0;
+            background: var(--acid);
+            transition: height 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        .stat-card:hover::before { height: 100%; }
+
+        .stat-num {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 5rem;
+            color: var(--white);
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stat-num span {
+            color: var(--acid);
+        }
+
+        .stat-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--ash);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .stat-desc {
+            font-size: 0.85rem;
+            color: var(--ash);
+            line-height: 1.6;
+            margin-top: 20px;
+            max-width: 260px;
+        }
+
+        /* TERMINAL */
+        #terminal {
+            margin: 0 48px 100px;
+            border: 1px solid var(--mist);
+            position: relative;
+        }
+
+        #terminal::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: 60px; right: 60px;
+            height: 2px;
+            background: var(--acid);
+        }
+
+        .terminal-header {
+            background: var(--fog);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--mist);
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .terminal-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot:nth-child(1) { background: #FF5F57; }
+        .terminal-dot:nth-child(2) { background: #FEBC2E; }
+        .terminal-dot:nth-child(3) { background: #28C840; }
+
+        .terminal-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--ash);
+            letter-spacing: 2px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .terminal-body {
+            padding: 36px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 2;
+            color: var(--ash);
+            min-height: 200px;
+        }
+
+        .terminal-body .prompt {
+            color: var(--acid);
+        }
+
+        .terminal-body .output {
+            color: var(--white);
+        }
+
+        .terminal-body .comment {
+            color: #555;
+        }
+
+        .cursor-blink {
+            display: inline-block;
+            width: 8px; height: 14px;
+            background: var(--acid);
+            vertical-align: middle;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        #contributor-list {
+            margin-top: 12px;
+        }
+
+        /* GALLERY */
+        #gallery {
+            padding: 0 48px 100px;
+        }
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 48px;
+        }
+
+        .gallery-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+        }
+
+        .gallery-meta {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--ash);
+            letter-spacing: 2px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--mist);
+        }
+
+        .grid-item {
+            background: var(--fog);
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            cursor: none;
+        }
+
+        .grid-item:nth-child(1) { grid-column: span 2; grid-row: span 2; }
+
+        .grid-item-inner {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .grid-item-num {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 5rem;
+            color: var(--mist);
+            line-height: 1;
+            transition: color 0.3s ease;
+        }
+
+        .grid-item:nth-child(1) .grid-item-num { font-size: 10rem; }
+
+        .grid-item:hover .grid-item-num { color: var(--acid); }
+
+        .grid-item-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--ash);
+            letter-spacing: 3px;
+            text-align: center;
+        }
+
+        .grid-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--acid);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .grid-item:hover::after { opacity: 0.05; }
+
+        /* FOOTER */
+        footer {
+            border-top: 1px solid var(--mist);
+            padding: 48px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 4px;
+            color: var(--ash);
+        }
+
+        .footer-copy {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--mist);
+            letter-spacing: 2px;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .hero { grid-template-columns: 1fr; }
+            .hero-right { display: none; }
+            .stats { grid-template-columns: 1fr; }
+            nav { padding: 20px 24px; }
+            .hero-left { padding: 120px 24px 80px; }
+            #terminal, #gallery { margin-left: 24px; margin-right: 24px; }
+            .stats { padding: 60px 24px; }
+            .grid-container { grid-template-columns: repeat(2, 1fr); }
+            footer { padding: 32px 24px; flex-direction: column; gap: 16px; text-align: center; }
+        }
+    </style>
 </head>
 <body>
+
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+
     <nav>
-        <div class="logo">THE ART OF OPEN SORUCE</div> 
-        <div class="status">System Status: <span id="status-mode">UNSTABLE</span></div>
+        <div class="logo">THE ART OF OPEN <span>SOURCE</span></div>
+        <div class="status">
+            <div class="status-dot"></div>
+            <span id="status-mode">SYSTEM STABLE</span>
+        </div>
     </nav>
 
     <main>
         <section class="hero">
-            <h1>CONTROL IS AN ILLUSION</h1>
-            <p>This repository is a blank canvas. All contributors. One mission.</p>
-            
-            <div class="action-box">
-                <button id="gate-btn">INITIALIZE CORE</button>
+            <div class="hero-left">
+                <p class="hero-tag">// Live Lab — Build 0.9.1</p>
+                <h1>CONTROL<br>IS AN <em>ILLUSION</em></h1>
+                <p class="hero-sub">This repository is a blank canvas. All contributors. One mission. The code belongs to everyone — and no one.</p>
+                <div class="hero-actions">
+                    <button id="gate-btn"><span>INITIALIZE CORE</span></button>
+                    <a href="#terminal" class="btn-secondary">VIEW LOGS →</a>
+                </div>
+            </div>
+            <div class="hero-right">
+                <div class="hero-visual" id="heroGrid"></div>
+                <div class="hero-counter">
+                    <span class="counter-num" id="counterNum">247</span>
+                    <p class="counter-label">Active Contributors</p>
+                </div>
             </div>
         </section>
 
-        <section id="gallery" class="grid-container"></section>
+        <div class="ticker-wrap">
+            <div class="ticker" id="ticker">
+                <span class="ticker-item">OPEN SOURCE <span class="ticker-dot">◆</span></span>
+                <span class="ticker-item">COLLABORATE <span class="ticker-dot">◆</span></span>
+                <span class="ticker-item">CONTRIBUTE <span class="ticker-dot">◆</span></span>
+                <span class="ticker-item">BUILD TOGETHER <span class="ticker-dot">◆</span></span>
+                <span class="ticker-item">FORK IT <span class="ticker-dot">◆</span></span>
+                <span class="ticker-item">PUSH TO MAIN <span class="ticker-dot">◆</span></span>
+                <span class="ticker-item">MERGE & SHIP <span class="ticker-dot">◆</span></span>
+                <span class="ticker-item">OPEN SOURCE <span class="ticker-dot">◆</span></span>
+                <span class="ticker-item">COLLABORATE <span class="ticker-dot">◆</span></span>
+                <span class="ticker-item">CONTRIBUTE <span class="ticker-dot">◆</span></span>
+                <span class="ticker-item">BUILD TOGETHER <span class="ticker-dot">◆</span></span>
+                <span class="ticker-item">FORK IT <span class="ticker-dot">◆</span></span>
+                <span class="ticker-item">PUSH TO MAIN <span class="ticker-dot">◆</span></span>
+                <span class="ticker-item">MERGE & SHIP <span class="ticker-dot">◆</span></span>
+            </div>
+        </div>
+
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-num"><span>2.4</span>K</div>
+                <div class="stat-label">Total Commits</div>
+                <p class="stat-desc">Contributions from developers across 38 countries, pushing boundaries daily.</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num"><span>98</span>%</div>
+                <div class="stat-label">Uptime</div>
+                <p class="stat-desc">Resilient infrastructure built by the community, for the community.</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num"><span>∞</span></div>
+                <div class="stat-label">Possibilities</div>
+                <p class="stat-desc">Every line of code opens a new door. The canvas is never finished.</p>
+            </div>
+        </section>
+
+        <div id="gallery" style="padding-top:100px;">
+            <div class="gallery-header">
+                <h2 class="gallery-title">LIVE GRID</h2>
+                <span class="gallery-meta">// REALTIME ACTIVITY</span>
+            </div>
+            <div class="grid-container" id="gallery-grid">
+                <div class="grid-item">
+                    <div class="grid-item-inner">
+                        <div class="grid-item-num">01</div>
+                        <div class="grid-item-label">LATEST PUSH</div>
+                    </div>
+                </div>
+                <div class="grid-item">
+                    <div class="grid-item-inner">
+                        <div class="grid-item-num">02</div>
+                        <div class="grid-item-label">OPEN PR</div>
+                    </div>
+                </div>
+                <div class="grid-item">
+                    <div class="grid-item-inner">
+                        <div class="grid-item-num">03</div>
+                        <div class="grid-item-label">ISSUES</div>
+                    </div>
+                </div>
+                <div class="grid-item">
+                    <div class="grid-item-inner">
+                        <div class="grid-item-num">04</div>
+                        <div class="grid-item-label">STARS</div>
+                    </div>
+                </div>
+                <div class="grid-item">
+                    <div class="grid-item-inner">
+                        <div class="grid-item-num">05</div>
+                        <div class="grid-item-label">FORKS</div>
+                    </div>
+                </div>
+                <div class="grid-item">
+                    <div class="grid-item-inner">
+                        <div class="grid-item-num">06</div>
+                        <div class="grid-item-label">WATCHERS</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <section id="terminal">
-            <div class="terminal-header">bash — 80x24</div>
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <div class="terminal-dot"></div>
+                    <div class="terminal-dot"></div>
+                    <div class="terminal-dot"></div>
+                </div>
+                <div class="terminal-title">bash — live-lab — 80×24</div>
+            </div>
             <div class="terminal-body">
-                <p>> Loading contributors.md...</p>
-                <div id="contributor-list">
-                    </div>
+                <div><span class="prompt">$</span> <span class="output">cat contributors.md</span></div>
+                <div class="comment"># Loading contributors.md...</div>
+                <div id="contributor-list"></div>
+                <div><span class="prompt">$</span> <span class="cursor-blink"></span></div>
             </div>
         </section>
     </main>
 
-    <script src="script.js"></script>
+    <footer>
+        <div class="footer-logo">THE ART OF OPEN SOURCE</div>
+        <div class="footer-copy">© 2025 — ALL RIGHTS OPEN</div>
+    </footer>
+
+    <script>
+        // Custom cursor
+        const cursor = document.getElementById('cursor');
+        const cursorRing = document.getElementById('cursorRing');
+        let mouseX = 0, mouseY = 0;
+        let ringX = 0, ringY = 0;
+
+        document.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursor.style.left = mouseX + 'px';
+            cursor.style.top = mouseY + 'px';
+        });
+
+        function animateRing() {
+            ringX += (mouseX - ringX) * 0.12;
+            ringY += (mouseY - ringY) *.12;
+            cursorRing.style.left = ringX + 'px';
+            cursorRing.style.top = ringY + 'px';
+            requestAnimationFrame(animateRing);
+        }
+        animateRing();
+
+        document.querySelectorAll('button, a, .grid-item, .stat-card').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursor.style.width = '20px';
+                cursor.style.height = '20px';
+                cursorRing.style.width = '56px';
+                cursorRing.style.height = '56px';
+            });
+            el.addEventListener('mouseleave', () => {
+                cursor.style.width = '12px';
+                cursor.style.height = '12px';
+                cursorRing.style.width = '36px';
+                cursorRing.style.height = '36px';
+            });
+        });
+
+        // Hero grid animation
+        const heroGrid = document.getElementById('heroGrid');
+        const totalCells = 80;
+        for (let i = 0; i < totalCells; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'grid-cell';
+            heroGrid.appendChild(cell);
+        }
+
+        function animateGrid() {
+            const cells = heroGrid.querySelectorAll('.grid-cell');
+            cells.forEach(c => c.className = 'grid-cell');
+            const litCount = Math.floor(Math.random() * 15) + 5;
+            for (let i = 0; i < litCount; i++) {
+                const idx = Math.floor(Math.random() * totalCells);
+                cells[idx].classList.add(Math.random() > 0.7 ? 'bright' : 'lit');
+            }
+        }
+        animateGrid();
+        setInterval(animateGrid, 800);
+
+        // Counter animation
+        function animateCounter(el, target, duration) {
+            let start = 0;
+            const step = target / (duration / 16);
+            const timer = setInterval(() => {
+                start += step;
+                if (start >= target) { start = target; clearInterval(timer); }
+                el.textContent = Math.floor(start);
+            }, 16);
+        }
+
+        setTimeout(() => {
+            animateCounter(document.getElementById('counterNum'), 247, 1500);
+        }, 1400);
+
+        // Terminal typing animation
+        const contributors = [
+            '→ @vortex_dev       — 142 commits',
+            '→ @nullcraft        — 98 commits',
+            '→ @syntax_ghost     — 76 commits',
+            '→ @zero_day_lily    — 63 commits',
+            '→ @fork_knife_dev   — 51 commits',
+        ];
+
+        let cIdx = 0;
+        function typeContributor() {
+            if (cIdx >= contributors.length) return;
+            const list = document.getElementById('contributor-list');
+            const line = document.createElement('div');
+            line.style.opacity = '0';
+            line.style.transition = 'opacity 0.3s ease';
+            line.style.color = cIdx % 2 === 0 ? '#F5F5F0' : '#888';
+            line.textContent = contributors[cIdx];
+            list.appendChild(line);
+            requestAnimationFrame(() => { line.style.opacity = '1'; });
+            cIdx++;
+            setTimeout(typeContributor, 400);
+        }
+        setTimeout(typeContributor, 1500);
+
+        // Gate button
+        document.getElementById('gate-btn').addEventListener('click', () => {
+            window.open('https://youtube.com/shorts/67MzO6x93WM?si=CwvCceLxXXJSE9P7L', '_blank');
+        });
+
+        // Intersection observer for stats
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.style.opacity = '1';
+                    e.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.stat-card, .grid-item').forEach((el, i) => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = `opacity 0.5s ease ${i * 0.1}s, transform 0.5s ease ${i * 0.1}s, background 0.3s ease`;
+            observer.observe(el);
+        });
+    </script>
 </body>
 </html>
