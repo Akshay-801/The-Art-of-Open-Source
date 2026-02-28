@@ -1,51 +1,79 @@
 :root {
-    --primary: #00ff95; /* Neon Green */
-    --bg: #0a0a0a;
-    --text: #ffffff;
+    --iron-red: #b71c1c;
+    --stark-gold: #ffd700;
+    --arc-blue: #00d4ff;
+    --bg: #0d0d0d;
+    --text: #f0f0f0;
 }
 
 body {
     background-color: var(--bg);
     color: var(--text);
-    font-family: 'Courier New', Courier, monospace; /* BUG 3 */
+    /* Sci-fi tech font stack */
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
-    overflow-x: hidden; /* BUG 4 */
+    overflow-x: hidden;
+    /* Subtle metallic texture feel */
+    background-image: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #0d0d0d 100%);
 }
 
 nav {
     display: flex;
     justify-content: space-between;
     padding: 20px;
-    border-bottom: 1px solid #333;
+    border-bottom: 2px solid var(--iron-red);
+    box-shadow: 0 5px 15px rgba(183, 28, 28, 0.2);
 }
 
-/* BUG 5 */
 .hero {
     height: 60vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    transform: scaleY(-1); 
+    text-align: center;
 }
 
 h1 {
     font-size: 5rem;
-    letter-spacing: -2px;
-    color: var(--primary);
-    text-shadow: 0 0 10px var(--primary); /* BUG 6 */
+    font-weight: 900;
+    text-transform: uppercase;
+    color: var(--stark-gold);
+    /* Layered shadow for a metallic 3D effect */
+    text-shadow: 
+        2px 2px 0px var(--iron-red),
+        4px 4px 10px rgba(255, 215, 0, 0.5);
+    margin-bottom: 20px;
 }
 
 #gate-btn {
-    background: transparent;
-    border: 2px solid var(--primary);
-    color: var(--primary);
-    padding: 15px 30px;
+    background: var(--iron-red);
+    border: 2px solid var(--stark-gold);
+    color: var(--stark-gold);
+    padding: 18px 40px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    letter-spacing: 2px;
     cursor: pointer;
-    transition: 0.3s;
+    border-radius: 5px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+    /* Pulse animation like the Arc Reactor */
+    animation: arc-pulse 2s infinite;
 }
 
-/* BUG 7 */
 #gate-btn:hover {
-    opacity: 0;
+    background: var(--stark-gold);
+    color: var(--iron-red);
+    transform: scale(1.1);
+    box-shadow: 0 0 30px var(--arc-blue);
+    border-color: var(--arc-blue);
+}
+
+/* Arc Reactor Pulse Effect */
+@keyframes arc-pulse {
+    0% { box-shadow: 0 0 5px var(--iron-red); }
+    50% { box-shadow: 0 0 20px var(--iron-red); }
+    100% { box-shadow: 0 0 5px var(--iron-red); }
 }
