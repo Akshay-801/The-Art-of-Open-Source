@@ -7,3 +7,4 @@ Add your name below following this format:
 1. **Akshay** | Carpe Diem
 2. **Karthi** | I use arch btw
 3. **Prasidha** | Veni. Vidi. Vici
+4. **Suwasthika V** | I study CSE
