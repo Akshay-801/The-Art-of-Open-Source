@@ -13,7 +13,7 @@ gateBtn.addEventListener('click', () => {
 
     overlay.innerHTML = `
         <video id="rickroll-video" width="100%" height="100%" autoplay>
-            <source src="assets/rickroll.mp4" type="video/mp4">
+            <source src="assets/gif.mp4" type="video/mp4">
         </video>
     `;
 
